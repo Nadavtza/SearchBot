@@ -1,7 +1,7 @@
  const request = require('request');
 
 
- const {startButtonHandler} =require('./buttonsHandlers');
+ const {specialtyButtonHandler ,experienceButtonHandler ,locationButtonHandler} =require('./buttonsHandlers');
  const {firstEntity} =require('./nlpHandler');
  
 
@@ -94,7 +94,19 @@ function callSendAPI(sender_psid, response) {
 
     switch(payload){
         case 'get_started':{
-            response = startButtonHandler();
+            response = specialtyButtonHandler();
+            break;
+        }
+        case 'specialty':{
+          response = experienceButtonHandler();
+          break;
+       }
+        case 'experience':{
+            response = locationButtonHandler();
+            break;
+        }
+        case 'location':{
+            response ={ "text": "Searching for you (: " };
             break;
         }
         case 'yes':{
