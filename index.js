@@ -9,7 +9,7 @@ const
   app = express().use(body_parser.json()); // creates express http server
 
 const {handleMessage, handlePostback,callSendAPI} =require('./handlers/message');
-        
+const {firstEntity} =require('./handlers/nlpHandler');
     
   
 
@@ -36,6 +36,7 @@ app.post('/webhook', (req, res) => {
         // Get the sender PSID
         let sender_psid = webhook_event.sender.id;
         console.log('Sender PSID: ' + sender_psid);
+        
       
         // Check if the event is a message or postback and
         // pass the event to the appropriate handler function
@@ -84,4 +85,6 @@ app.get('/webhook', (req, res) => {
     }
   }
 });
+
+
 

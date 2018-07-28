@@ -1,18 +1,29 @@
  const request = require('request');
 
+
+ const {startButtonHandler} =require('./buttonsHandlers');
+ const {firstEntity} =require('./nlpHandler');
  
 
 // Handles messages events
 function handleMessage(sender_psid, received_message) {
     let response;
-    
+
+    // check NLP
+    const nlp = firstEntity(received_message.nlp, 'greetings');
+    if (nlp && nlp.confidence > 0.8) {
+        response = {
+            "text": `Hi there`
+          }
+    }
     // Checks if the message contains text
-    if (received_message.text) {    
+    else if (received_message.text) {    
       // Create the payload for a basic text message, which
       // will be added to the body of our request to the Send API
       response = {
         "text": `You sent the message: "${received_message.text}". Now send me an attachment!`
       }
+    
     } else if (received_message.attachments) {
       // Get the URL of the message attachment
       let attachment_url = received_message.attachments[0].payload.url;
@@ -75,12 +86,37 @@ function callSendAPI(sender_psid, response) {
 
 
   // Handles messaging_postbacks events
-function handlePostback(sender_psid, received_postback) {
+  function handlePostback(sender_psid, received_postback) {
+    let response;
+    
+    // Get the payload for the postback
+    let payload = received_postback.payload;
 
-}
+    switch(payload){
+        case 'get_started':{
+            response = startButtonHandler();
+            break;
+        }
+        case 'yes':{
+            response = { "text": "Thanks!" }
+            break;
+        }
+        case 'no':{
+            response = { "text": "Oops, try sending another image." }
+            break;
+        }
+    }
+   
+    // Send the message to acknowledge the postback
+    callSendAPI(sender_psid, response);
+  }
+
+      
+
+
 
   module.exports = {
     handleMessage,
     handlePostback,
-    callSendAPI
+    callSendAPI,
   };
