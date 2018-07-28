@@ -4,53 +4,39 @@
  const {specialtyButtonHandler ,experienceButtonHandler ,locationButtonHandler} =require('./buttonsHandlers');
  const {firstEntity} =require('./nlpHandler');
  
+ var searchValues = {
+  'specialty': [],
+  'experience': [],
+  'location': []
+ };
 
 // Handles messages events
 function handleMessage(sender_psid, received_message) {
     let response;
 
-    // check NLP
-    const nlp = firstEntity(received_message.nlp, 'greetings');
-    if (nlp && nlp.confidence > 0.8) {
-        response = {
-            "text": `Hi there`
-          }
-    }
+    
     // Checks if the message contains text
-    else if (received_message.text) {    
+     if (received_message.text) {    
       // Create the payload for a basic text message, which
       // will be added to the body of our request to the Send API
-      response = {
-        "text": `You sent the message: "${received_message.text}". Now send me an attachment!`
+      // check NLP
+      const nlp = firstEntity(received_message.nlp, 'greetings');
+      if (nlp && nlp.confidence > 0.8) {
+          response = {
+              "text": `Hi there`
+            }
       }
-    
-    } else if (received_message.attachments) {
-      // Get the URL of the message attachment
-      let attachment_url = received_message.attachments[0].payload.url;
-      response = {
-        "attachment": {
-          "type": "template",
-          "payload": {
-            "template_type": "generic",
-            "elements": [{
-              "title": "Is this the right picture?",
-              "subtitle": "Tap a button to answer.",
-              "image_url": attachment_url,
-              "buttons": [
-                {
-                  "type": "postback",
-                  "title": "Yes!",
-                  "payload": "yes",
-                },
-                {
-                  "type": "postback",
-                  "title": "No!",
-                  "payload": "no",
-                }
-              ],
-            }]
-          }
+      else {
+        response = {
+          "text": `You sent the message: "${received_message.text}". I'm not sure what to do.`
         }
+      }
+     
+    }
+    //if not a text
+    else{
+      response = {
+        "text": `I'm not sure what to do with that.`
       }
     } 
     
@@ -91,6 +77,7 @@ function callSendAPI(sender_psid, response) {
     
     // Get the payload for the postback
     let payload = received_postback.payload;
+    let title  = received_postback.title;
 
     switch(payload){
         case 'get_started':{
@@ -98,23 +85,18 @@ function callSendAPI(sender_psid, response) {
             break;
         }
         case 'specialty':{
+          searchValues.specialty.push(title);
           response = experienceButtonHandler();
           break;
        }
         case 'experience':{
+            searchValues.experience.push(title);
             response = locationButtonHandler();
             break;
         }
         case 'location':{
-            response ={ "text": "Searching for you (: " };
-            break;
-        }
-        case 'yes':{
-            response = { "text": "Thanks!" }
-            break;
-        }
-        case 'no':{
-            response = { "text": "Oops, try sending another image." }
+            searchValues.location.push(title);
+            response ={ "text": `Searching for you (: Looking for a ${searchValues.experience[0]} ${searchValues.specialty[0]} position in ${searchValues.location[0]} region.`};
             break;
         }
     }
